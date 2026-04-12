@@ -14,38 +14,34 @@ load_dotenv()
 
 DISCORD_KEY = os.getenv("DISCORD_KEY")
 EMAIL_CHANNEL_ID = os.getenv("EMAIL_CHANNEL_ID")
-def botSendMessage(msg,CHANNEL_ID):
-    
-    if not msg:
+
+
+# -----------------------------
+# DISCORD BOT FUNCTION
+# -----------------------------
+def botSendMessage(msg, CHANNEL_ID):
+    if not msg or not CHANNEL_ID:
         return
+
     url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages"
     data = {"content": msg}
-    headers = {"Authorization": f"Bot {DISCORD_KEY}"}
-    
-   
+    headers = {
+        "Authorization": f"Bot {DISCORD_KEY}",
+        "Content-Type": "application/json"
+    }
+
     r = requests.post(url, json=data, headers=headers)
-    print(r.status_code)
-    
+    print("Discord:", r.status_code)
 
 
+# -----------------------------
+# LOAD PREVIOUS EMAIL STATE
+# -----------------------------
 try:
-    f=open("previous_data.dat","rb")
-
+    with open("previous_data.dat", "rb") as f:
+        previous_emails = pickle.load(f)
 except:
-    f=open("previous_data.dat","wb")
-    data = {}
-    pickle.dump(data,f)
-    f.close()
-    f=open("previous_data.dat","rb")
-
-previous_data=pickle.load(f)
-
-current_data={}
-
-
-
-
-
+    previous_emails = set()
 
 
 # -----------------------------
@@ -53,31 +49,33 @@ current_data={}
 # -----------------------------
 url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQfFwitdOSUI52bDmb4f7dCVRl6komI8SdzH_qm9PdsbvuWcvb_199vwXUVH6oZG6wu-xCqiZIfPDm5/pub?gid=0&single=true&output=csv"
 
-attendants = []
-
 response = requests.get(url)
 csv_data = response.content.decode("utf-8")
 reader = csv.DictReader(StringIO(csv_data))
 
+attendants = []
+current_emails = set()
 
-    
-
+# -----------------------------
+# PARSE SHEET
+# -----------------------------
 for row in reader:
-    current_data[row["id"]] = row["email"]
+    email = row["email"].strip().lower()
+    current_emails.add(email)
 
-    # FORMAT DATE
+    # format date safely
     raw_date = row["created_at"]
     try:
         dt = datetime.strptime(raw_date, "%m/%d/%Y %H:%M:%S")
-        formatted_date = dt.strftime("%B %d, %Y")  # e.g. April 04, 2026
+        formatted_date = dt.strftime("%B %d, %Y")
     except:
-        formatted_date = raw_date  # fallback if format breaks
+        formatted_date = raw_date
 
     attendants.append({
-        "id": row["id"],  # ✅ DIRECTLY FROM SHEET
+        "id": row["id"],
         "first_name": row["first_name"],
         "last_name": row["last_name"],
-        "email": row["email"],
+        "email": email,
         "major": row["major"],
         "t_shirt_size": row["t_shirt_size"],
         "dietary_preference": row["dietary_preference"],
@@ -87,22 +85,17 @@ for row in reader:
     })
 
 
+# -----------------------------
+# FIND NEW EMAILS (FIXED CORE LOGIC)
+# -----------------------------
+newemails = current_emails - previous_emails
 
+print("NEW EMAILS:", newemails)
 
-
-newemails = []
-
-for i in current_data:
-    if i not in previous_data:
-        print("NEW ENTRY: ", current_data[i])
-        newemails.append(current_data[i])
-
-print("NEW EMAILS: ", newemails)
-
-if len(newemails) == 0:
+if not newemails:
     print("No new entries. Exiting.")
-    botSendMessage("No new entries. Exiting.",EMAIL_CHANNEL_ID)
-    exit()  # Stop execution if no new emails
+    botSendMessage("No new entries. Exiting.", EMAIL_CHANNEL_ID)
+    exit()
 
 
 # -----------------------------
@@ -114,7 +107,6 @@ EMAIL_ADDRESS = "acmsc.asu@gmail.com"
 EMAIL_PASSWORD = "yftc dcds efii oqiv"
 
 
-
 # -----------------------------
 # SEND EMAILS
 # -----------------------------
@@ -124,11 +116,10 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
 
     for person in attendants:
         if person["email"] in newemails:
+
             participant_id = person["id"]
 
-            # -------------------------
-            # CREATE QR CODE (ID ONLY)
-            # -------------------------
+            # QR CODE
             qr = qrcode.make(str(participant_id))
 
             buffer = io.BytesIO()
@@ -136,9 +127,7 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             buffer.seek(0)
             img_data = buffer.read()
 
-            # -------------------------
-            # BUILD EMAIL
-            # -------------------------
+            # EMAIL
             msg = EmailMessage()
             msg["Subject"] = f"You're in, {person['first_name']} 🚀 | GlobeHack"
             msg["From"] = f"Globehack <{EMAIL_ADDRESS}>"
@@ -147,61 +136,57 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             msg.set_content("Your email client does not support HTML.")
 
             msg.add_alternative(f"""
-    <!DOCTYPE html>
-    <html>
-    <body style="font-family: Arial; background:#fdf8f4; margin:0;">
+<!DOCTYPE html>
+<html>
+<body style="font-family: Arial; background:#fdf8f4; margin:0;">
 
-    <div style="max-width:600px; margin:auto; background:white; padding:30px;">
+<div style="max-width:600px; margin:auto; background:white; padding:30px;">
 
-    <!-- QR SECTION -->
-    <div style="background:#f3f4f6; padding:20px; text-align:center; border-left:4px solid #991b1b;">
-        <h2>Your Check-In QR Code</h2>
-    
-        <img src="cid:qr_image" style="max-width:200px;">
-    </div>
+<div style="background:#f3f4f6; padding:20px; text-align:center; border-left:4px solid #991b1b;">
+    <h2>Your Check-In QR Code</h2>
+    <img src="cid:qr_image" style="max-width:200px;">
+</div>
 
-    <h1>Hi {person['first_name']},</h1>
+<h1>Hi {person['first_name']},</h1>
 
-    <p>You are officially registered for <b>GlobeHack Season 1</b>.</p>
+<p>You are officially registered for <b>GlobeHack Season 1</b>.</p>
 
-    <!-- REGISTRATION DETAILS -->
-    <div style="background:#f9fafb; padding:20px; margin-top:20px;">
-        <h3>Your Registration Details</h3>
-        <p><b>Name:</b> {person['first_name']} {person['last_name']}</p>
-        <p><b>Email:</b> {person['email']}</p>
-        <p><b>Major:</b> {person['major']}</p>
-        <p><b>T-Shirt Size:</b> {person['t_shirt_size']}</p>
-        <p><b>Dietary Preference:</b> {person['dietary_preference']}</p>
-        <p><b>Other Dietary Notes:</b> {person['dietary_other']}</p>
-        <p><b>Team Preference:</b> {person['team_preference']}</p>
-        <p><b>Registered On:</b> {person['created_at']}</p>
-    </div>
+<div style="background:#f9fafb; padding:20px; margin-top:20px;">
+    <h3>Your Registration Details</h3>
+    <p><b>Name:</b> {person['first_name']} {person['last_name']}</p>
+    <p><b>Email:</b> {person['email']}</p>
+    <p><b>Major:</b> {person['major']}</p>
+    <p><b>T-Shirt Size:</b> {person['t_shirt_size']}</p>
+    <p><b>Dietary Preference:</b> {person['dietary_preference']}</p>
+    <p><b>Other Dietary Notes:</b> {person['dietary_other']}</p>
+    <p><b>Team Preference:</b> {person['team_preference']}</p>
+    <p><b>Registered On:</b> {person['created_at']}</p>
+</div>
 
-    <!-- NEXT STEPS -->
-    <div style="margin-top:20px;">
-        <h3>Next Steps</h3>
-        <p>1. Join Discord</p>
-        <a href="https://discord.gg/PA3XaxjxVH" style="display:block; background:#1e3a8a; color:white; padding:10px; text-align:center; text-decoration:none;">Join Server</a>
+<div style="margin-top:20px;">
+    <h3>Next Steps</h3>
+    <p>1. Join Discord</p>
+    <a href="https://discord.gg/PA3XaxjxVH"
+       style="display:block; background:#1e3a8a; color:white; padding:10px; text-align:center;">
+       Join Server
+    </a>
 
-        <p>2. Build in Public → Use <b>#GlobeHackS1</b></p>
-        <p>3. Stay tuned for updates</p>
-    </div>
+    <p>2. Build in Public → Use <b>#GlobeHackS1</b></p>
+    <p>3. Stay tuned for updates</p>
+</div>
 
-    <p style="margin-top:30px;"><b>April 18–19 · ASU Tempe</b></p>
+<p style="margin-top:30px;"><b>April 18–19 · ASU Tempe</b></p>
 
-    <div style="margin-top:30px; background:#1e3a8a; color:white; text-align:center; padding:20px;">
-        GlobeHack 2026 🚀
-    </div>
+<div style="margin-top:30px; background:#1e3a8a; color:white; text-align:center; padding:20px;">
+    GlobeHack 2026 🚀
+</div>
 
-    </div>
+</div>
+</body>
+</html>
+""", subtype="html")
 
-    </body>
-    </html>
-            """, subtype="html")
-
-            # -------------------------
-            # ATTACH QR IMAGE
-            # -------------------------
+            # attach QR
             msg.add_attachment(
                 img_data,
                 maintype="image",
@@ -211,16 +196,15 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
                 cid="qr_image"
             )
 
-            # -------------------------
-            # SEND
-            # -------------------------
             server.send_message(msg)
             print(f"Sent to {person['email']} | ID: {participant_id}")
-            botSendMessage(f"Sent to {person['email']} | ID: {participant_id}",EMAIL_CHANNEL_ID)
+            botSendMessage(f"Sent to {person['email']} | ID: {participant_id}", EMAIL_CHANNEL_ID)
 
 
+# -----------------------------
+# SAVE STATE SAFELY
+# -----------------------------
 print("saving current data...")
-previous_data = current_data
-f = open("previous_data.dat","wb")
-pickle.dump(previous_data,f)
-f.close()
+
+with open("previous_data.dat", "wb") as f:
+    pickle.dump(current_emails, f)
