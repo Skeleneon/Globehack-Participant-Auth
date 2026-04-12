@@ -3,11 +3,14 @@ name: Run QR Sender
 on:
   schedule:
     - cron: "*/15 * * * *"  # every 15 minutes
-  workflow_dispatch:        # allows manual run
+  workflow_dispatch:
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write   # REQUIRED to push changes
 
     steps:
       - name: Checkout repo
@@ -23,11 +26,19 @@ jobs:
           pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Ensure required folders/files exist
+      - name: Ensure folders exist
         run: |
           mkdir -p qrs
-          touch data.dat
 
       - name: Run script
         run: |
           python "qr code sender final.py"
+
+      - name: Commit and push previous_data.dat
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+
+          git add previous_data.dat || true
+          git commit -m "Update previous_data.dat" || echo "No changes to commit"
+          git push
