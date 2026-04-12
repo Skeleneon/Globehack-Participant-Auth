@@ -3,7 +3,7 @@ name: Run QR Sender
 on:
   schedule:
     - cron: "*/10 * * * *"   
-  workflow_dispatch:
+  
 
 # 🔥 prevents multiple runs from corrupting previous_data.dat
 concurrency:
