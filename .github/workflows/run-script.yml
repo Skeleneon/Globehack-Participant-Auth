@@ -1,10 +1,8 @@
 name: Run QR Sender v2
 
 on:
-  status: 
+  
   push:
-    branches: [ "master" ]
-  pull_request:
     branches: [ "master" ]
   workflow_dispatch:
   #schedule:
