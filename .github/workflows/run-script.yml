@@ -2,8 +2,12 @@ name: Run QR Sender
 
 on:
   schedule:
-    - cron: "*/15 * * * *"   # change to */6 for every 6 minutes if needed
+    - cron: "*/5 * * * *"
   workflow_dispatch:
+
+concurrency:
+  group: qr-sender
+  cancel-in-progress: false
 
 jobs:
   run-script:
@@ -16,7 +20,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # IMPORTANT: allows pull/rebase safely
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -31,7 +35,10 @@ jobs:
       - name: Ensure folders exist
         run: mkdir -p qrs
 
+      # 🔐 SAFE: inject Discord token securely
       - name: Run script
+        env:
+          DISCORD_KEY: ${{ secrets.DISCORD_KEY }}
         run: python "qr code sender final.py"
 
       - name: Commit and push previous_data.dat safely
@@ -39,14 +46,14 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
 
-          # Add file (ignore if unchanged)
           git add previous_data.dat
 
+          # Only commit if there are changes
           git diff --cached --quiet && echo "No changes to commit" && exit 0
 
           git commit -m "Update previous_data.dat"
 
-          # 🔥 KEY FIX: sync with remote before pushing
-          git pull --rebase origin master
+          # Safe sync before push (prevents random failures)
+          git pull --rebase origin master || echo "No remote changes"
 
           git push origin master
