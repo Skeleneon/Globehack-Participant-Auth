@@ -1,0 +1,13 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Ignore everything inside qrs but keep folder
+qrs/*
+
+# Keep folder itself in repo (optional safety file)
+!qrs/.gitkeep
+
+# Keep only previous_data.dat
+*.dat
+!previous_data.dat
