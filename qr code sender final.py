@@ -25,24 +25,24 @@ def botSendMessage(msg, CHANNEL_ID):
         return
 
     url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages"
-    data = {"content": msg}
     headers = {
         "Authorization": f"Bot {DISCORD_KEY}",
         "Content-Type": "application/json"
     }
 
-    r = requests.post(url, json=data, headers=headers)
-    print("Discord:", r.status_code)
+    requests.post(url, json={"content": msg}, headers=headers)
 
 
 # -----------------------------
-# LOAD PREVIOUS EMAIL STATE
+# LOAD PREVIOUS DATA (DICT)
 # -----------------------------
 try:
     with open("previous_data.dat", "rb") as f:
         previous_emails = pickle.load(f)
+        if not isinstance(previous_emails, dict):
+            previous_emails = {}
 except:
-    previous_emails = set()
+    previous_emails = {}
 
 
 # -----------------------------
@@ -53,51 +53,81 @@ url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQfFwitdOSUI52bDmb4f7dCVR
 response = requests.get(url, timeout=15)
 if response.status_code != 200:
     raise Exception("Failed to fetch Google Sheet CSV")
-csv_data = response.content.decode("utf-8")
+
+csv_data = response.text
 reader = csv.DictReader(StringIO(csv_data))
 
-
-
 attendants = []
-current_emails = set()
+current_emails = {}  # dict[id -> email]
+
 
 # -----------------------------
 # PARSE SHEET
 # -----------------------------
 for row in reader:
-    email = row["email"].strip().lower()
-    current_emails.add(email)
-
-    # format date safely
-    raw_date = row["created_at"]
     try:
-        dt = datetime.strptime(raw_date, "%m/%d/%Y %H:%M:%S")
-        formatted_date = dt.strftime("%B %d, %Y")
-    except:
-        formatted_date = raw_date
+        participant_id = row["id"].strip()
+        email = row["email"].strip().lower()
 
-    attendants.append({
-        "id": row["id"],
-        "first_name": row["first_name"],
-        "last_name": row["last_name"],
-        "email": email,
-        "major": row["major"],
-        "t_shirt_size": row["t_shirt_size"],
-        "dietary_preference": row["dietary_preference"],
-        "dietary_other": row["dietary_other"],
-        "team_preference": row["team_preference"],
-        "created_at": formatted_date
-    })
+        if not participant_id or not email:
+            continue
+
+        current_emails[participant_id] = email
+
+        # format date safely
+        raw_date = row["created_at"]
+        try:
+            dt = datetime.strptime(raw_date, "%m/%d/%Y %H:%M:%S")
+            formatted_date = dt.strftime("%B %d, %Y")
+        except:
+            formatted_date = raw_date
+
+        attendants.append({
+            "id": participant_id,
+            "first_name": row["first_name"],
+            "last_name": row["last_name"],
+            "email": email,
+            "major": row["major"],
+            "t_shirt_size": row["t_shirt_size"],
+            "dietary_preference": row["dietary_preference"],
+            "dietary_other": row["dietary_other"],
+            "team_preference": row["team_preference"],
+            "created_at": formatted_date
+        })
+
+    except Exception as e:
+        print("Skipping row:", e)
 
 
 # -----------------------------
-# FIND NEW EMAILS (FIXED CORE LOGIC)
+# FIND NEW ENTRIES (DICT DIFF)
 # -----------------------------
-newemails = current_emails - previous_emails
+new_emails = {
+    pid: email
+    for pid, email in current_emails.items()
+    if pid not in previous_emails
+}
 
-print("NEW EMAILS:", newemails)
+print("---- DEBUG ----")
+botSendMessage(f"""
+               
+---- DEBUG ----
+Current: {len(current_emails)}
+Previous: {len(previous_emails)}
+New: {len(new_emails)}
+New IDs: {list(new_emails.keys())}               
+----------------               
+               
+               """, EMAIL_CHANNEL_ID)
 
-if not newemails:
+print("Current:", len(current_emails))
+print("Previous:", len(previous_emails))
+print("New:", len(new_emails))
+print("New IDs:", list(new_emails.keys()))
+print("----------------")
+
+
+if not new_emails:
     print("No new entries. Exiting.")
     botSendMessage("No new entries. Exiting.", EMAIL_CHANNEL_ID)
     exit()
@@ -110,8 +140,7 @@ SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 EMAIL_ADDRESS = "acmsc.asu@gmail.com"
 
-
-
+botmsg = ""
 # -----------------------------
 # SEND EMAILS
 # -----------------------------
@@ -120,7 +149,7 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
     server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
 
     for person in attendants:
-        if person["email"] in newemails:
+        if person["id"] in new_emails:
 
             participant_id = person["id"]
 
@@ -130,12 +159,11 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             buffer = io.BytesIO()
             qr.save(buffer, format="PNG")
             buffer.seek(0)
-            img_data = buffer.read()
 
             # EMAIL
             msg = EmailMessage()
             msg["Subject"] = f"You're in, {person['first_name']} 🚀 | GlobeHack"
-            msg["From"] = f"Globehack <{EMAIL_ADDRESS}>"
+            msg["From"] = f"GlobeHack <{EMAIL_ADDRESS}>"
             msg["To"] = person["email"]
 
             msg.set_content("Your email client does not support HTML.")
@@ -147,43 +175,23 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
 
 <div style="max-width:600px; margin:auto; background:white; padding:30px;">
 
-<div style="background:#f3f4f6; padding:20px; text-align:center; border-left:4px solid #991b1b;">
+<div style="background:#f3f4f6; padding:20px; text-align:center;">
     <h2>Your Check-In QR Code</h2>
     <img src="cid:qr_image" style="max-width:200px;">
 </div>
 
 <h1>Hi {person['first_name']},</h1>
 
-<p>You are officially registered for <b>GlobeHack Season 1</b>.</p>
+<p>You are officially registered for <b>GlobeHack</b>.</p>
 
-<div style="background:#f9fafb; padding:20px; margin-top:20px;">
-    <h3>Your Registration Details</h3>
+<div style="margin-top:20px;">
     <p><b>Name:</b> {person['first_name']} {person['last_name']}</p>
     <p><b>Email:</b> {person['email']}</p>
     <p><b>Major:</b> {person['major']}</p>
     <p><b>T-Shirt Size:</b> {person['t_shirt_size']}</p>
-    <p><b>Dietary Preference:</b> {person['dietary_preference']}</p>
-    <p><b>Other Dietary Notes:</b> {person['dietary_other']}</p>
+    <p><b>Diet:</b> {person['dietary_preference']}</p>
     <p><b>Team Preference:</b> {person['team_preference']}</p>
-    <p><b>Registered On:</b> {person['created_at']}</p>
-</div>
-
-<div style="margin-top:20px;">
-    <h3>Next Steps</h3>
-    <p>1. Join Discord</p>
-    <a href="https://discord.gg/PA3XaxjxVH"
-       style="display:block; background:#1e3a8a; color:white; padding:10px; text-align:center;">
-       Join Server
-    </a>
-
-    <p>2. Build in Public → Use <b>#GlobeHackS1</b></p>
-    <p>3. Stay tuned for updates</p>
-</div>
-
-<p style="margin-top:30px;"><b>April 18–19 · ASU Tempe</b></p>
-
-<div style="margin-top:30px; background:#1e3a8a; color:white; text-align:center; padding:20px;">
-    GlobeHack 2026 🚀
+    <p><b>Registered:</b> {person['created_at']}</p>
 </div>
 
 </div>
@@ -193,23 +201,28 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
 
             # attach QR
             msg.add_attachment(
-                img_data,
+                buffer.read(),
                 maintype="image",
                 subtype="png",
                 filename="qr.png",
-                disposition="inline",
                 cid="qr_image"
             )
-
+            
             server.send_message(msg)
             print(f"Sent to {person['email']} | ID: {participant_id}")
-            botSendMessage(f"Sent to {person['email']} | ID: {participant_id}", EMAIL_CHANNEL_ID)
+            botmsg += f"Sent to {person['email']} | ID: {participant_id}\n"
 
+            
 
+botSendMessage(botmsg, EMAIL_CHANNEL_ID)
 # -----------------------------
-# SAVE STATE SAFELY
+# SAVE STATE (DICT)
 # -----------------------------
-print("saving current data...")
+print("Saving state...")
 
-with open("previous_data.dat", "wb") as f:
+tmp_file = "previous_data.tmp"
+
+with open(tmp_file, "wb") as f:
     pickle.dump(current_emails, f)
+
+os.replace(tmp_file, "previous_data.dat")
