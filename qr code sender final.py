@@ -101,6 +101,7 @@ print("NEW EMAILS: ", newemails)
 
 if len(newemails) == 0:
     print("No new entries. Exiting.")
+    botSendMessage("No new entries. Exiting.",EMAIL_CHANNEL_ID)
     exit()  # Stop execution if no new emails
 
 
