@@ -2,8 +2,8 @@ name: Run QR Sender v2
 
 on:
   schedule:
-    - cron: "*/10 * * * *"   
-  
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
 
 # 🔥 prevents multiple runs from corrupting previous_data.dat
 concurrency:
@@ -24,7 +24,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # REQUIRED for rebase
+          fetch-depth: 0  # required for git operations
 
       # -----------------------------
       # SETUP PYTHON
@@ -70,7 +70,7 @@ jobs:
 
           git commit -m "Update previous_data.dat"
 
-          # 🔥 Pull latest changes safely (auto-detect branch)
+          # Pull latest changes safely
           BRANCH=$(git rev-parse --abbrev-ref HEAD)
           git pull --rebase origin $BRANCH
 
