@@ -14,6 +14,7 @@ load_dotenv()
 
 DISCORD_KEY = os.getenv("DISCORD_KEY")
 EMAIL_CHANNEL_ID = os.getenv("EMAIL_CHANNEL_ID")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 
 
 # -----------------------------
@@ -49,9 +50,13 @@ except:
 # -----------------------------
 url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQfFwitdOSUI52bDmb4f7dCVRl6komI8SdzH_qm9PdsbvuWcvb_199vwXUVH6oZG6wu-xCqiZIfPDm5/pub?gid=0&single=true&output=csv"
 
-response = requests.get(url)
+response = requests.get(url, timeout=15)
+if response.status_code != 200:
+    raise Exception("Failed to fetch Google Sheet CSV")
 csv_data = response.content.decode("utf-8")
 reader = csv.DictReader(StringIO(csv_data))
+
+
 
 attendants = []
 current_emails = set()
@@ -104,7 +109,7 @@ if not newemails:
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 EMAIL_ADDRESS = "acmsc.asu@gmail.com"
-EMAIL_PASSWORD = "yftc dcds efii oqiv"
+
 
 
 # -----------------------------
