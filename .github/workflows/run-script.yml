@@ -1,10 +1,11 @@
 name: Run QR Sender v2
 
 on:
-  schedule:
-    - cron: '*/13 * * * *'
-    - cron: '*/7 * * * *'
   workflow_dispatch:
+  schedule:
+    - cron: "*/13 * * * *"
+    - cron: "*/7 * * * *"
+  
 
 # 🔥 prevents multiple runs from corrupting previous_data
 concurrency:
@@ -47,6 +48,7 @@ jobs:
       # RUN SCRIPT
       # -----------------------------
       - name: Run QR sender
+      
         env:
           DISCORD_KEY: ${{ secrets.DISCORD_KEY }}
           EMAIL_CHANNEL_ID: ${{ secrets.EMAIL_CHANNEL_ID }}
