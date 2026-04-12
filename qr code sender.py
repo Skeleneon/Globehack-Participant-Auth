@@ -5,102 +5,150 @@ import qrcode
 import io
 from io import StringIO
 from email.message import EmailMessage
-from email.mime.image import MIMEImage
+from datetime import datetime
+
 
 # -----------------------------
-# Load Google Sheets CSV
+# LOAD GOOGLE SHEETS CSV
 # -----------------------------
 url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQfFwitdOSUI52bDmb4f7dCVRl6komI8SdzH_qm9PdsbvuWcvb_199vwXUVH6oZG6wu-xCqiZIfPDm5/pub?gid=0&single=true&output=csv"
 
-attendants_file = {}
+attendants = []
 
 response = requests.get(url)
 csv_data = response.content.decode("utf-8")
 reader = csv.DictReader(StringIO(csv_data))
 
 for row in reader:
-    crInt = 0
-    fInt = 0
-    lInt = 0
 
-    for n in row["created_at"]:
-        if n.isdigit():
-            crInt += int(n)
+    # FORMAT DATE
+    raw_date = row["created_at"]
+    try:
+        dt = datetime.strptime(raw_date, "%m/%d/%Y %H:%M:%S")
+        formatted_date = dt.strftime("%B %d, %Y")  # e.g. April 04, 2026
+    except:
+        formatted_date = raw_date  # fallback if format breaks
 
-    for n in row["first_name"]:
-        fInt += ord(n)
-
-    for n in row["last_name"]:
-        lInt += ord(n)
-
-    participant_id = crInt + fInt + lInt
-    attendants_file[participant_id] = row["email"]
+    attendants.append({
+        "id": row["id"],  # ✅ DIRECTLY FROM SHEET
+        "first_name": row["first_name"],
+        "last_name": row["last_name"],
+        "email": row["email"],
+        "major": row["major"],
+        "t_shirt_size": row["t_shirt_size"],
+        "dietary_preference": row["dietary_preference"],
+        "dietary_other": row["dietary_other"],
+        "team_preference": row["team_preference"],
+        "created_at": formatted_date
+    })
 
 
 # -----------------------------
-# SMTP SETUP
+# SMTP CONFIG
 # -----------------------------
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 EMAIL_ADDRESS = "acmsc.asu@gmail.com"
-EMAIL_PASSWORD = "mlle muud zyfc mity"
+EMAIL_PASSWORD = "yftc dcds efii oqiv"
 
 
 # -----------------------------
-# SEND EMAILS WITH QR CODES
+# SEND EMAILS
 # -----------------------------
 with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
     server.starttls()
     server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
 
-    for participant_id, email in attendants_file.items():
+    for person in attendants:
+        participant_id = person["id"]
 
         # -------------------------
-        # Create QR (in memory)
+        # CREATE QR CODE (ID ONLY)
         # -------------------------
-        qr_data = f"id={participant_id}&email={email}"
-        qr = qrcode.make(qr_data)
+        qr = qrcode.make(str(participant_id))
 
         buffer = io.BytesIO()
         qr.save(buffer, format="PNG")
         buffer.seek(0)
+        img_data = buffer.read()
 
         # -------------------------
-        # Build email
+        # BUILD EMAIL
         # -------------------------
         msg = EmailMessage()
-        msg["Subject"] = "Your Unique QR Code"
-        msg["From"] = EMAIL_ADDRESS
-        msg["To"] = email
+        msg["Subject"] = f"You're in, {person['first_name']} 🚀 | GlobeHack"
+        msg["From"] = f"Globehack <{EMAIL_ADDRESS}>"
+        msg["To"] = person["email"]
 
         msg.set_content("Your email client does not support HTML.")
 
         msg.add_alternative(f"""
-        <html>
-            <body>
-                <h2>Your Unique QR Code</h2>
-                <p>ID: {participant_id}</p>
-                <p>Scan this QR code:</p>
-                <img src="cid:qr_image">
-            </body>
-        </html>
+<!DOCTYPE html>
+<html>
+<body style="font-family: Arial; background:#fdf8f4; margin:0;">
+
+<div style="max-width:600px; margin:auto; background:white; padding:30px;">
+
+<!-- QR SECTION -->
+<div style="background:#f3f4f6; padding:20px; text-align:center; border-left:4px solid #991b1b;">
+    <h2>Your Check-In QR Code</h2>
+   
+    <img src="cid:qr_image" style="max-width:200px;">
+</div>
+
+<h1>Hi {person['first_name']},</h1>
+
+<p>You are officially registered for <b>GlobeHack Season 1</b>.</p>
+
+<!-- REGISTRATION DETAILS -->
+<div style="background:#f9fafb; padding:20px; margin-top:20px;">
+    <h3>Your Registration Details</h3>
+    <p><b>Name:</b> {person['first_name']} {person['last_name']}</p>
+    <p><b>Email:</b> {person['email']}</p>
+    <p><b>Major:</b> {person['major']}</p>
+    <p><b>T-Shirt Size:</b> {person['t_shirt_size']}</p>
+    <p><b>Dietary Preference:</b> {person['dietary_preference']}</p>
+    <p><b>Other Dietary Notes:</b> {person['dietary_other']}</p>
+    <p><b>Team Preference:</b> {person['team_preference']}</p>
+    <p><b>Registered On:</b> {person['created_at']}</p>
+</div>
+
+<!-- NEXT STEPS -->
+<div style="margin-top:20px;">
+    <h3>Next Steps</h3>
+    <p>1. Join Discord</p>
+    <a href="https://discord.gg/PA3XaxjxVH" style="display:block; background:#1e3a8a; color:white; padding:10px; text-align:center; text-decoration:none;">Join Server</a>
+
+    <p>2. Build in Public → Use <b>#GlobeHackS1</b></p>
+    <p>3. Stay tuned for updates</p>
+</div>
+
+<p style="margin-top:30px;"><b>April 18–19 · ASU Tempe</b></p>
+
+<div style="margin-top:30px; background:#1e3a8a; color:white; text-align:center; padding:20px;">
+    GlobeHack 2026 🚀
+</div>
+
+</div>
+
+</body>
+</html>
         """, subtype="html")
 
         # -------------------------
-        # Attach QR inline
+        # ATTACH QR IMAGE
         # -------------------------
-img_data = buffer.read()
-
-msg.add_attachment(
-    img_data,
-    maintype="image",
-    subtype="png",
-    filename="qr.png",
-    cid="qr_image")
+        msg.add_attachment(
+            img_data,
+            maintype="image",
+            subtype="png",
+            filename="qr.png",
+            disposition="inline",
+            cid="qr_image"
+        )
 
         # -------------------------
-        # Send email
+        # SEND
         # -------------------------
-server.send_message(msg)
-
-print(f"Sent to {email} | ID: {participant_id}")
+        server.send_message(msg)
+        print(f"Sent to {person['email']} | ID: {participant_id}")
