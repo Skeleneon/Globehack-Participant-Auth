@@ -156,7 +156,8 @@ New IDs: {list(new_emails.keys())}
 if not new_emails:
     log("No new entries. Exiting.")
     botmsg += "No new entries. Exiting.\n"
-    
+    if botmsg.strip():
+        botSendMessage(botmsg, EMAIL_CHANNEL_ID)
     exit()
 
 
