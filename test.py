@@ -16,6 +16,7 @@ load_dotenv()
 DISCORD_KEY = os.getenv("DISCORD_KEY")
 EMAIL_CHANNEL_ID = os.getenv("EMAIL_CHANNEL_ID")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+print(DISCORD_KEY)
 botmsg = ""
 
 # -----------------------------
