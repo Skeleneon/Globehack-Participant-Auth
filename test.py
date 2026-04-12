@@ -1,8 +1,31 @@
+import traceback
+import requests
+import csv
+import smtplib
+import qrcode
+import io
+from io import StringIO
+from email.message import EmailMessage
+from datetime import datetime
 import pickle
+import os
+from dotenv import load_dotenv
 
-with open("previous_data.dat", "rb") as f:
-    data = pickle.load(f)
+load_dotenv()
 
-print(type(data))   # should be <class 'set'>
-print(len(data))
-print(data)
+DISCORD_KEY = os.getenv("DISCORD_KEY")
+EMAIL_CHANNEL_ID = os.getenv("EMAIL_CHANNEL_ID")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+botmsg = ""
+
+# -----------------------------
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+EMAIL_ADDRESS = "acmsc.asu@gmail.com"
+
+
+
+
+with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+    server.starttls()
+    server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
