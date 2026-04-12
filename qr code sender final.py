@@ -7,6 +7,26 @@ from io import StringIO
 from email.message import EmailMessage
 from datetime import datetime
 import pickle
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+DISCORD_KEY = os.getenv("DISCORD_KEY")
+EMAIL_CHANNEL_ID = os.getenv("EMAIL_CHANNEL_ID")
+def botSendMessage(msg,CHANNEL_ID):
+    
+    if not msg:
+        return
+    url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages"
+    data = {"content": msg}
+    headers = {"Authorization": f"Bot {DISCORD_KEY}"}
+    
+   
+    r = requests.post(url, json=data, headers=headers)
+    print(r.status_code)
+    
+
 
 try:
     f=open("previous_data.dat","rb")
