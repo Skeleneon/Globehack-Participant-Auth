@@ -16,6 +16,7 @@ load_dotenv()
 DISCORD_KEY = os.getenv("DISCORD_KEY")
 EMAIL_CHANNEL_ID = os.getenv("EMAIL_CHANNEL_ID")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+botmsg = ""
 
 
 # -----------------------------
@@ -57,7 +58,7 @@ def botSendMessage(msg, CHANNEL_ID):
     except Exception as e:
         log_error(f"Discord send failed: {e}")
 
-botSendMessage("Script started", EMAIL_CHANNEL_ID)
+botmsg += "Script started\n"
 log("Script started")
 # -----------------------------
 # LOAD PREVIOUS DATA (DICT SAFE)
@@ -78,7 +79,9 @@ url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQfFwitdOSUI52bDmb4f7dCVR
 
 response = requests.get(url, timeout=15)
 if response.status_code != 200:
+    botmsg += "Failed to fetch Google Sheet CSV\n"
     raise Exception("Failed to fetch Google Sheet CSV")
+    
 
 csv_data = response.text
 reader = csv.DictReader(StringIO(csv_data))
@@ -121,6 +124,7 @@ for row in reader:
         })
 
     except Exception as e:
+        botmsg+= f"Error parsing row: {e}\n"
         log_error(f"Skipping row: {e}")
 
 
@@ -140,20 +144,19 @@ log(f"New: {len(new_emails)}")
 log(f"New IDs: {list(new_emails.keys())}")
 log("----------------")
 
-botSendMessage(
-f"""---- DEBUG ----
+botmsg += f"""---- DEBUG ----
 Current: {len(current_emails)}
 Previous: {len(previous_emails)}
 New: {len(new_emails)}
 New IDs: {list(new_emails.keys())}
-----------------""",
-EMAIL_CHANNEL_ID
-)
+----------------\n"""
+
 
 
 if not new_emails:
     log("No new entries. Exiting.")
-    botSendMessage("No new entries. Exiting.", EMAIL_CHANNEL_ID)
+    botmsg += "No new entries. Exiting.\n"
+    
     exit()
 
 
@@ -164,7 +167,7 @@ SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 EMAIL_ADDRESS = "acmsc.asu@gmail.com"
 
-botmsg = ""
+
 
 
 # -----------------------------
@@ -216,17 +219,12 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             botmsg += f"Sent to {person['email']} | ID: {participant_id}\n"
 
 
-# -----------------------------
-# SEND FINAL DISCORD MESSAGE (SAFE)
-# -----------------------------
+log("Saving state...")
+botmsg += "Saving state...\n"
+
+
 if botmsg.strip():
     botSendMessage(botmsg, EMAIL_CHANNEL_ID)
-
-
-# -----------------------------
-# SAVE STATE SAFELY
-# -----------------------------
-log("Saving state...")
 
 tmp_file = "previous_data.tmp"
 
