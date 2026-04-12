@@ -215,6 +215,7 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             # -------------------------
             server.send_message(msg)
             print(f"Sent to {person['email']} | ID: {participant_id}")
+            botSendMessage(f"Sent to {person['email']} | ID: {participant_id}",EMAIL_CHANNEL_ID)
 
 
 print("saving current data...")
