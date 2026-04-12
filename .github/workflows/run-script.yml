@@ -2,7 +2,7 @@ name: Run QR Sender v2
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "5,15,25,35,45,55 * * * *"
   workflow_dispatch:
 
 # 🔥 prevents multiple runs from corrupting previous_data.dat
