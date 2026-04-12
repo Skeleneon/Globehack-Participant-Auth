@@ -35,10 +35,12 @@ jobs:
       - name: Ensure folders exist
         run: mkdir -p qrs
 
-      # 🔐 SAFE: inject Discord token securely
+      # 🔐 Inject ALL secrets properly
       - name: Run script
         env:
           DISCORD_KEY: ${{ secrets.DISCORD_KEY }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_CHANNEL_ID: ${{ secrets.EMAIL_CHANNEL_ID }}
         run: python "qr code sender final.py"
 
       - name: Commit and push previous_data.dat safely
@@ -48,12 +50,15 @@ jobs:
 
           git add previous_data.dat
 
-          # Only commit if there are changes
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          # skip commit if no changes
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
 
           git commit -m "Update previous_data.dat"
 
-          # Safe sync before push (prevents random failures)
+          # safer sync before push
           git pull --rebase origin master || echo "No remote changes"
 
           git push origin master
