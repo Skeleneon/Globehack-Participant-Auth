@@ -2,8 +2,13 @@ name: Run QR Sender
 
 on:
   schedule:
-    - cron: "*/15 * * * *"   # change to */6 for every 6 minutes if needed
+    - cron: "*/15 * * * *"   # every 15 minutes
   workflow_dispatch:
+
+# 🔥 prevents multiple runs from corrupting previous_data.dat
+concurrency:
+  group: qr-sender
+  cancel-in-progress: true
 
 jobs:
   run-script:
@@ -13,40 +18,60 @@ jobs:
       contents: write
 
     steps:
+      # -----------------------------
+      # CHECKOUT REPO
+      # -----------------------------
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # IMPORTANT: allows pull/rebase safely
+          fetch-depth: 0  # REQUIRED for rebase
 
+      # -----------------------------
+      # SETUP PYTHON
+      # -----------------------------
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
+      # -----------------------------
+      # INSTALL DEPENDENCIES
+      # -----------------------------
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Ensure folders exist
-        run: mkdir -p qrs
-
-      - name: Run script
+      # -----------------------------
+      # RUN SCRIPT
+      # -----------------------------
+      - name: Run QR sender
+        env:
+          DISCORD_KEY: ${{ secrets.DISCORD_KEY }}
+          EMAIL_CHANNEL_ID: ${{ secrets.EMAIL_CHANNEL_ID }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: python "qr code sender final.py"
 
-      - name: Commit and push previous_data.dat safely
+      # -----------------------------
+      # COMMIT STATE FILE (SAFE)
+      # -----------------------------
+      - name: Commit and push state
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
 
-          # Add file (ignore if unchanged)
-          git add previous_data.dat
+          # Add file if it exists
+          if [ -f previous_data.dat ]; then
+            git add previous_data.dat
+          fi
 
+          # Exit if no changes
           git diff --cached --quiet && echo "No changes to commit" && exit 0
 
           git commit -m "Update previous_data.dat"
 
-          # 🔥 KEY FIX: sync with remote before pushing
-          git pull --rebase origin master
+          # 🔥 Pull latest changes safely (auto-detect branch)
+          BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          git pull --rebase origin $BRANCH
 
-          git push origin master
+          git push origin $BRANCH
