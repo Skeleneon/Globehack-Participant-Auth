@@ -197,14 +197,57 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             msg.set_content("Your email client does not support HTML.")
 
             msg.add_alternative(f"""
+<!DOCTYPE html>
 <html>
-<body>
-<h2>Hi {person['first_name']}</h2>
-<p>You're registered for GlobeHack.</p>
-<img src="cid:qr_image">
+<body style="font-family: Arial; background:#fdf8f4; margin:0;">
+
+<div style="max-width:600px; margin:auto; background:white; padding:30px;">
+
+<!-- QR SECTION -->
+<div style="background:#f3f4f6; padding:20px; text-align:center; border-left:4px solid #991b1b;">
+    <h2>Your Check-In QR Code</h2>
+   
+    <img src="cid:qr_image" style="max-width:200px;">
+</div>
+
+<h1>Hi {person['first_name']},</h1>
+
+<p>You are officially registered for <b>GlobeHack Season 1</b>.</p>
+
+<!-- REGISTRATION DETAILS -->
+<div style="background:#f9fafb; padding:20px; margin-top:20px;">
+    <h3>Your Registration Details</h3>
+    <p><b>Name:</b> {person['first_name']} {person['last_name']}</p>
+    <p><b>Email:</b> {person['email']}</p>
+    <p><b>Major:</b> {person['major']}</p>
+    <p><b>T-Shirt Size:</b> {person['t_shirt_size']}</p>
+    <p><b>Dietary Preference:</b> {person['dietary_preference']}</p>
+    <p><b>Other Dietary Notes:</b> {person['dietary_other']}</p>
+    <p><b>Team Preference:</b> {person['team_preference']}</p>
+    <p><b>Registered On:</b> {person['created_at']}</p>
+</div>
+
+<!-- NEXT STEPS -->
+<div style="margin-top:20px;">
+    <h3>Next Steps</h3>
+    <p>1. Join Discord</p>
+    <a href="https://discord.gg/PA3XaxjxVH" style="display:block; background:#1e3a8a; color:white; padding:10px; text-align:center; text-decoration:none;">Join Server</a>
+
+    <p>2. Build in Public → Use <b>#GlobeHackS1</b></p>
+    <p>3. Stay tuned for updates</p>
+</div>
+
+<p style="margin-top:30px;"><b>April 18-19 · ASU Tempe</b></p>
+
+<div style="margin-top:30px; background:#1e3a8a; color:white; text-align:center; padding:20px;">
+    GlobeHack 2026 🚀
+</div>
+
+</div>
+
 </body>
 </html>
-""", subtype="html")
+        """, subtype="html")
 
             msg.add_attachment(
                 buffer.read(),
