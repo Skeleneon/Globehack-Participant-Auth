@@ -1,4 +1,4 @@
-name: Run QR Sender
+name: Run QR Sender v2
 
 on:
   schedule:
