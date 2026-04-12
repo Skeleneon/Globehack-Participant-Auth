@@ -56,6 +56,7 @@ def botSendMessage(msg, CHANNEL_ID):
         log_error(f"Discord send failed: {e}")
 
 botSendMessage("Script started", EMAIL_CHANNEL_ID)
+log("Script started")
 # -----------------------------
 # LOAD PREVIOUS DATA (DICT SAFE)
 # -----------------------------
