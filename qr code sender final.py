@@ -1,3 +1,4 @@
+import traceback
 import requests
 import csv
 import smtplib
@@ -18,23 +19,45 @@ EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 
 
 # -----------------------------
-# DISCORD BOT FUNCTION
+# LOGGING
+# -----------------------------
+def log(msg):
+    print(f"[LOG] {msg}", flush=True)
+
+def log_error(msg):
+    print(f"[ERROR] {msg}", flush=True)
+    traceback.print_exc()
+
+
+# -----------------------------
+# DISCORD BOT FUNCTION (FIXED)
 # -----------------------------
 def botSendMessage(msg, CHANNEL_ID):
-    if not msg or not CHANNEL_ID:
-        return
+    try:
+        if not msg or not CHANNEL_ID:
+            log("Discord skipped: empty message or channel ID")
+            return
 
-    url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages"
-    headers = {
-        "Authorization": f"Bot {DISCORD_KEY}",
-        "Content-Type": "application/json"
-    }
+        url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages"
+        headers = {
+            "Authorization": f"Bot {DISCORD_KEY}",
+            "Content-Type": "application/json"
+        }
 
-    requests.post(url, json={"content": msg}, headers=headers)
+        r = requests.post(url, json={"content": msg}, headers=headers)
+
+        log(f"Discord status: {r.status_code}")
+        log(f"Discord response: {r.text}")
+
+        if r.status_code >= 300:
+            raise Exception(f"Discord API failed: {r.status_code} {r.text}")
+
+    except Exception as e:
+        log_error(f"Discord send failed: {e}")
 
 
 # -----------------------------
-# LOAD PREVIOUS DATA (DICT)
+# LOAD PREVIOUS DATA (DICT SAFE)
 # -----------------------------
 try:
     with open("previous_data.dat", "rb") as f:
@@ -58,7 +81,7 @@ csv_data = response.text
 reader = csv.DictReader(StringIO(csv_data))
 
 attendants = []
-current_emails = {}  # dict[id -> email]
+current_emails = {}  # id -> email
 
 
 # -----------------------------
@@ -74,7 +97,6 @@ for row in reader:
 
         current_emails[participant_id] = email
 
-        # format date safely
         raw_date = row["created_at"]
         try:
             dt = datetime.strptime(raw_date, "%m/%d/%Y %H:%M:%S")
@@ -96,11 +118,11 @@ for row in reader:
         })
 
     except Exception as e:
-        print("Skipping row:", e)
+        log_error(f"Skipping row: {e}")
 
 
 # -----------------------------
-# FIND NEW ENTRIES (DICT DIFF)
+# FIND NEW ENTRIES
 # -----------------------------
 new_emails = {
     pid: email
@@ -108,27 +130,26 @@ new_emails = {
     if pid not in previous_emails
 }
 
-print("---- DEBUG ----")
-botSendMessage(f"""
-               
----- DEBUG ----
+log("---- DEBUG ----")
+log(f"Current: {len(current_emails)}")
+log(f"Previous: {len(previous_emails)}")
+log(f"New: {len(new_emails)}")
+log(f"New IDs: {list(new_emails.keys())}")
+log("----------------")
+
+botSendMessage(
+f"""---- DEBUG ----
 Current: {len(current_emails)}
 Previous: {len(previous_emails)}
 New: {len(new_emails)}
-New IDs: {list(new_emails.keys())}               
-----------------               
-               
-               """, EMAIL_CHANNEL_ID)
-
-print("Current:", len(current_emails))
-print("Previous:", len(previous_emails))
-print("New:", len(new_emails))
-print("New IDs:", list(new_emails.keys()))
-print("----------------")
+New IDs: {list(new_emails.keys())}
+----------------""",
+EMAIL_CHANNEL_ID
+)
 
 
 if not new_emails:
-    print("No new entries. Exiting.")
+    log("No new entries. Exiting.")
     botSendMessage("No new entries. Exiting.", EMAIL_CHANNEL_ID)
     exit()
 
@@ -141,6 +162,8 @@ SMTP_PORT = 587
 EMAIL_ADDRESS = "acmsc.asu@gmail.com"
 
 botmsg = ""
+
+
 # -----------------------------
 # SEND EMAILS
 # -----------------------------
@@ -153,14 +176,12 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
 
             participant_id = person["id"]
 
-            # QR CODE
             qr = qrcode.make(str(participant_id))
 
             buffer = io.BytesIO()
             qr.save(buffer, format="PNG")
             buffer.seek(0)
 
-            # EMAIL
             msg = EmailMessage()
             msg["Subject"] = f"You're in, {person['first_name']} 🚀 | GlobeHack"
             msg["From"] = f"GlobeHack <{EMAIL_ADDRESS}>"
@@ -169,37 +190,15 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             msg.set_content("Your email client does not support HTML.")
 
             msg.add_alternative(f"""
-<!DOCTYPE html>
 <html>
-<body style="font-family: Arial; background:#fdf8f4; margin:0;">
-
-<div style="max-width:600px; margin:auto; background:white; padding:30px;">
-
-<div style="background:#f3f4f6; padding:20px; text-align:center;">
-    <h2>Your Check-In QR Code</h2>
-    <img src="cid:qr_image" style="max-width:200px;">
-</div>
-
-<h1>Hi {person['first_name']},</h1>
-
-<p>You are officially registered for <b>GlobeHack</b>.</p>
-
-<div style="margin-top:20px;">
-    <p><b>Name:</b> {person['first_name']} {person['last_name']}</p>
-    <p><b>Email:</b> {person['email']}</p>
-    <p><b>Major:</b> {person['major']}</p>
-    <p><b>T-Shirt Size:</b> {person['t_shirt_size']}</p>
-    <p><b>Diet:</b> {person['dietary_preference']}</p>
-    <p><b>Team Preference:</b> {person['team_preference']}</p>
-    <p><b>Registered:</b> {person['created_at']}</p>
-</div>
-
-</div>
+<body>
+<h2>Hi {person['first_name']}</h2>
+<p>You're registered for GlobeHack.</p>
+<img src="cid:qr_image">
 </body>
 </html>
 """, subtype="html")
 
-            # attach QR
             msg.add_attachment(
                 buffer.read(),
                 maintype="image",
@@ -207,18 +206,24 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
                 filename="qr.png",
                 cid="qr_image"
             )
-            
+
             server.send_message(msg)
-            print(f"Sent to {person['email']} | ID: {participant_id}")
+
+            log(f"Sent to {person['email']} | ID: {participant_id}")
             botmsg += f"Sent to {person['email']} | ID: {participant_id}\n"
 
-            
 
-botSendMessage(botmsg, EMAIL_CHANNEL_ID)
 # -----------------------------
-# SAVE STATE (DICT)
+# SEND FINAL DISCORD MESSAGE (SAFE)
 # -----------------------------
-print("Saving state...")
+if botmsg.strip():
+    botSendMessage(botmsg, EMAIL_CHANNEL_ID)
+
+
+# -----------------------------
+# SAVE STATE SAFELY
+# -----------------------------
+log("Saving state...")
 
 tmp_file = "previous_data.tmp"
 
