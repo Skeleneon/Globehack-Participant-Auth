@@ -11,3 +11,4 @@ qrs/*
 # Keep only previous_data.dat
 *.dat
 !previous_data.dat
+.env
