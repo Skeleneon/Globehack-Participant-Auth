@@ -2,10 +2,11 @@ name: Run QR Sender v2
 
 on:
   schedule:
-    - cron: "6,13,23,33,43,53 * * * *"
+    - cron: '*/13 * * * *'
+    - cron: '*/7 * * * *'
   workflow_dispatch:
 
-# 🔥 prevents multiple runs from corrupting previous_data.dat
+# 🔥 prevents multiple runs from corrupting previous_data
 concurrency:
   group: qr-sender
   cancel-in-progress: true
