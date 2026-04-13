@@ -209,6 +209,15 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
     @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap');
     *{{box-sizing:border-box;margin:0;padding:0;}}
     body{{background:#08040c;font-family:'Inter',Arial,sans-serif;color:#fff;-webkit-font-smoothing:antialiased;}}
+    @media (prefers-color-scheme: dark) {{
+  body{{
+    background: #08040c !important;
+    color: #ffffff !important;
+  }}      
+  .wrapper {{
+    background: #08040c !important;
+  }}
+}}                      
     .wrapper{{max-width:600px;margin:0 auto;background:#08040c;}}
 
     /* ── KEYFRAMES ── */
@@ -378,7 +387,7 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
 
     <div class="hero-confirmation">
       <div class="hero-eyebrow">Registration Confirmed</div>
-      <div class="hero-headline">You're <em>officially</em><br>in.</div>
+      <div class="hero-headline">You're officially<br>in.</div>
       <div class="hero-sub">Welcome to GlobeHack Season 1. Here's everything you need to show up ready.</div>
     </div>
   </div>
