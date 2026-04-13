@@ -198,55 +198,248 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
 
             msg.add_alternative(f"""
 <!DOCTYPE html>
-<html>
-<body style="font-family: Arial; background:#fdf8f4; margin:0;">
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <title>GlobeHack 2026 — You're In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap');
+    *{{box-sizing:border-box;margin:0;padding:0;}}
+    body{{background:#08040c;font-family:'Inter',Arial,sans-serif;color:#fff;-webkit-font-smoothing:antialiased;}}
+    .wrapper{{max-width:600px;margin:0 auto;background:#08040c;}}
 
-<div style="max-width:600px; margin:auto; background:white; padding:30px;">
+    /* ── KEYFRAMES ── */
+    @keyframes fade-rise{{from{{opacity:0;transform:translateY(20px)}}to{{opacity:1;transform:translateY(0)}}}}
+    @keyframes globe-spin{{from{{transform:rotate(0deg)}}to{{transform:rotate(360deg)}}}}
+    @keyframes globe-pulse{{0%,100%{{filter:drop-shadow(0 0 30px rgba(200,60,255,.55)) drop-shadow(0 0 70px rgba(30,100,255,.4));transform:scale(1)}}50%{{filter:drop-shadow(0 0 55px rgba(220,80,255,.8)) drop-shadow(0 0 110px rgba(30,130,255,.6));transform:scale(1.04)}}}}
+    @keyframes halo-spin{{from{{transform:rotate(0deg) scale(1.18)}}to{{transform:rotate(-360deg) scale(1.18)}}}}
+    @keyframes halo-pulse{{0%,100%{{opacity:.55}}50%{{opacity:.85}}}}
+    @keyframes grid-drift{{from{{background-position:0 0}}to{{background-position:38px 38px}}}}
 
-<!-- QR SECTION -->
-<div style="background:#f3f4f6; padding:20px; text-align:center; border-left:4px solid #991b1b;">
-    <h2>Your Check-In QR Code</h2>
-   
-    <img src="cid:qr_image" style="max-width:200px;">
+    /* ── HERO BANNER ── */
+    .hero-banner{{
+      position:relative;overflow:hidden;
+      background:radial-gradient(ellipse 140% 100% at 50% 110%, #08040c 42%, #1a0828 60%, #300a12 78%, #0a0612 100%);
+      padding:52px 48px 56px;text-align:center;
+    }}
+
+    /* Grid overlay */
+    .hero-banner::before{{
+      content:'';position:absolute;inset:0;z-index:0;
+      background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
+      background-size:38px 38px;
+      animation:grid-drift 6s linear infinite;
+    }}
+
+    /* Radial vignette keep edges dark */
+    .hero-banner::after{{
+      content:'';position:absolute;inset:0;z-index:0;
+      background:radial-gradient(ellipse 75% 75% at 50% 50%,transparent 35%,rgba(8,4,12,.75) 100%);
+      pointer-events:none;
+    }}
+
+    .hero-wordmark{{
+      position:relative;z-index:10;
+      font-family:'Instrument Serif',serif;
+      font-size:46px;line-height:.88;letter-spacing:-.5px;color:#fff;font-weight:400;
+      text-shadow:0 0 40px rgba(200,80,255,.55),0 0 80px rgba(30,100,255,.35),0 2px 4px rgba(0,0,0,.9);
+      margin-bottom:36px;
+      animation:fade-rise .9s ease-out both;
+    }}
+    .hero-wordmark span{{color:rgba(255,255,255,.32);}}
+
+    /* Globe wrapper — spins the image slowly */
+    .globe-wrap{{
+      position:relative;z-index:5;
+      width:260px;height:260px;
+      margin:0 auto 38px;
+    }}
+
+    /* Outer rotating halo ring — conic gradient */
+    .globe-halo{{
+      position:absolute;
+      inset:-28px;
+      border-radius:50%;
+      background:conic-gradient(
+        from 0deg,
+        rgba(220,50,255,.0) 0%,
+        rgba(220,50,255,.45) 12%,
+        rgba(30,120,255,.6) 28%,
+        rgba(0,200,255,.3) 38%,
+        rgba(0,200,255,.0) 50%,
+        rgba(200,40,255,.0) 62%,
+        rgba(200,40,255,.35) 75%,
+        rgba(30,80,255,.25) 88%,
+        rgba(220,50,255,.0) 100%
+      );
+      animation:halo-spin 8s linear infinite, halo-pulse 4s ease-in-out infinite;
+      filter:blur(14px);
+    }}
+
+    /* The actual globe image */
+    .globe-img{{
+      position:absolute;inset:0;
+      width:100%;height:100%;
+      border-radius:50%;
+      object-fit:cover;
+      animation:globe-spin 28s linear infinite, globe-pulse 5s ease-in-out infinite;
+      -webkit-mask-image:radial-gradient(circle, black 90%, transparent 97%);
+      mask-image:radial-gradient(circle, black 90%, transparent 97%);
+      transform-origin:center center;
+    }}
+
+    /* Counter-rotating inner energy shimmer */
+    .globe-shimmer{{
+      position:absolute;inset:0;
+      border-radius:50%;
+      background:radial-gradient(circle at 38% 35%, rgba(255,120,120,.18) 0%, transparent 55%),
+                  radial-gradient(circle at 62% 65%, rgba(80,160,255,.18) 0%, transparent 55%);
+      animation:globe-spin 18s linear infinite reverse;
+      mix-blend-mode:screen;
+      pointer-events:none;
+    }}
+
+    /* Hero text */
+    .hero-confirmation{{position:relative;z-index:10;animation:fade-rise .9s ease-out .3s both;}}
+    .hero-eyebrow{{font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:14px;}}
+    .hero-headline{{font-family:'Instrument Serif',serif;font-size:50px;line-height:.93;letter-spacing:-1.6px;color:#fff;font-weight:400;margin-bottom:16px;text-shadow:0 0 30px rgba(200,80,255,.3),0 0 60px rgba(30,100,255,.2);}}
+    .hero-headline em{{font-style:normal;color:rgba(255,255,255,.3);}}
+    .hero-sub{{font-size:14px;line-height:1.7;color:rgba(255,255,255,.42);max-width:360px;margin:0 auto;}}
+
+    /* ── CONTENT ── */
+    .greeting{{padding:40px 48px 28px;border-top:1px solid rgba(255,255,255,.07);animation:fade-rise .8s ease-out .2s both;}}
+    .greeting-name{{font-family:'Instrument Serif',serif;font-size:28px;color:#fff;font-weight:400;margin-bottom:8px;}}
+    .greeting-copy{{font-size:14px;color:rgba(255,255,255,.46);line-height:1.75;}}
+    .greeting-copy strong{{color:rgba(255,255,255,.82);font-weight:600;}}
+
+    .qr-section{{
+      margin:0 48px 28px;border-radius:14px;
+      border:1px solid rgba(200,80,255,.2);
+      background:linear-gradient(135deg,rgba(80,20,120,.18) 0%,rgba(20,60,160,.12) 100%);
+      padding:32px 28px;text-align:center;
+      animation:fade-rise .8s ease-out .3s both;position:relative;overflow:hidden;
+    }}
+    .qr-section::before{{content:'';position:absolute;inset:0;border-radius:14px;background:radial-gradient(ellipse 60% 55% at 50% 0%,rgba(200,80,255,.1) 0%,transparent 70%);pointer-events:none;}}
+    .qr-label{{position:relative;font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(200,120,255,.75);margin-bottom:20px;}}
+    .qr-img-wrap{{width:120px;height:120px;margin:0 auto 12px;border-radius:10px;overflow:hidden;border:1px solid rgba(180,80,255,.2);background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;position:relative;}}
+    .qr-note{{font-size:12px;color:rgba(255,255,255,.27);margin-top:4px;position:relative;}}
+    .checkin-time{{margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,.06);position:relative;}}
+    .checkin-label{{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(180,100,255,.55);margin-bottom:6px;}}
+    .checkin-value{{font-family:'Instrument Serif',serif;font-size:22px;color:rgba(255,255,255,.85);}}
+
+    .details-section{{margin:0 48px 28px;border-radius:14px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.02);overflow:hidden;animation:fade-rise .8s ease-out .4s both;}}
+    .details-header{{padding:16px 24px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);}}
+    .details-title{{font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.28);}}
+    .detail-row{{display:flex;justify-content:space-between;align-items:baseline;padding:12px 24px;border-bottom:1px solid rgba(255,255,255,.04);gap:16px;}}
+    .detail-row:last-child{{border-bottom:none;}}
+    .detail-key{{font-size:12px;color:rgba(255,255,255,.3);font-weight:500;white-space:normal;flex-shrink:0;}}
+    .detail-val{{font-size:13px;color:rgba(255,255,255,.65);text-align:right;word-break:break-all;}}
+
+    .steps-section{{margin:0 16px 28px;animation:fade-rise .8s ease-out .5s both;}}
+    .steps-title{{font-family:'Instrument Serif',serif;font-size:24px;color:#fff;margin-bottom:20px;font-weight:400;}}
+    .step{{display:flex;gap:16px;align-items:flex-start;margin-bottom:14px;}}
+    .step-num{{width:26px;height:26px;border-radius:50%;border:1px solid rgba(180,80,255,.35);background:rgba(120,40,200,.12);display:flex;align-items:center;justify-content:center;font-size:11px;color:rgba(190,120,255,.7);font-weight:600;flex-shrink:0;margin-top:1px;}}
+    .step-text{{font-size:14px;color:rgba(255,255,255,.52);line-height:1.65;padding-top:3px;}}
+    .step-text strong{{color:rgba(255,255,255,.85);font-weight:600;}}
+
+    .btn-discord{{display:block;margin:20px 48px 28px;padding:16px 28px;text-align:center;text-decoration:none;border-radius:10px;background:linear-gradient(135deg,rgba(120,40,200,.22) 0%,rgba(40,100,220,.14) 100%);border:1px solid rgba(180,80,255,.28);color:rgba(255,255,255,.88);font-size:14px;font-weight:500;letter-spacing:.03em;animation:fade-rise .8s ease-out .55s both;}}
+    .divider{{margin:0 48px 28px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent);}}
+    .footer{{padding:24px 48px 48px;text-align:center;animation:fade-rise .8s ease-out .6s both;}}
+    .footer-date{{font-family:'Instrument Serif',serif;font-size:18px;color:rgba(255,255,255,.42);margin-bottom:16px;}}
+    .footer-date span{{color:rgba(255,255,255,.18);margin:0 8px;}}
+    .footer-brand{{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.16);}}
+
+    @media only screen and (max-width:480px){{
+      .hero-banner,.greeting,.steps-section,.footer{{padding-left:24px;padding-right:24px;}}
+      .qr-section,.details-section,.divider{{margin-left:24px;margin-right:24px;}}
+      .btn-discord{{margin-left:24px;margin-right:24px;}}
+      .hero-headline{{font-size:36px;}}
+      .hero-wordmark{{font-size:34px;}}
+      .globe-wrap{{width:200px;height:200px;}}
+    }}
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HERO -->
+  <div class="hero-banner">
+    <div class="hero-wordmark">GLOBE<br><span>HACK</span>'26</div>
+
+    <!-- Globe -->
+    <div class="globe-wrap">
+      <div class="globe-halo"></div>
+      <img class="globe-img" src="cid:globe_graphic" alt="GlobeHack globe"/>
+      <div class="globe-shimmer"></div>
+    </div>
+
+    <div class="hero-confirmation">
+      <div class="hero-eyebrow">Registration Confirmed</div>
+      <div class="hero-headline">You're <em>officially</em><br>in.</div>
+      <div class="hero-sub">Welcome to GlobeHack Season 1. Here's everything you need to show up ready.</div>
+    </div>
+  </div>
+
+  <!-- GREETING -->
+  <div class="greeting">
+    <div class="greeting-name">Hi {person['first_name']},</div>
+    <div class="greeting-copy">
+      You are officially registered for <strong>GlobeHack Season 1</strong>.<br>
+      Save this email — it has your check-in QR and all the info you need for the weekend.
+    </div>
+  </div>
+
+  <!-- QR -->
+  <div class="qr-section">
+    <div class="qr-label">Your Check-In QR Code</div>
+    <div class="qr-img-wrap">
+      <img src="cid:qr_image" style="max-width:200px;">
+    </div>
+    <div class="qr-note">Screenshot this or open on your phone at the door</div>
+    <div class="checkin-time">
+      <div class="checkin-label">Check-In Opens</div>
+      <div class="checkin-value">Saturday · 8:00 AM</div>
+    </div>
+  </div>
+
+  <!-- DETAILS -->
+  <div class="details-section">
+    <div class="details-header"><div class="details-title">Your Registration Details</div></div>
+    <div class="detail-row"><div class="detail-key">Name:&nbsp;</div><div class="detail-val">{" " + person['first_name']} {person['last_name']}</div></div>
+    <div class="detail-row"><div class="detail-key">Email:&nbsp;</div><div class="detail-val">{" " + person['email']}</div></div>
+    <div class="detail-row"><div class="detail-key">Major:&nbsp;</div><div class="detail-val">{" " + person['major']}</div></div>
+    <div class="detail-row"><div class="detail-key">T-Shirt Size:&nbsp;</div><div class="detail-val">{" " + person['t_shirt_size']}</div></div>
+    <div class="detail-row"><div class="detail-key">Dietary Preference:&nbsp;</div><div class="detail-val">{" " + person['dietary_preference']}</div></div>
+    <div class="detail-row"><div class="detail-key">Dietary Notes:&nbsp;</div><div class="detail-val">{" " + person['dietary_other']}</div></div>
+    <div class="detail-row"><div class="detail-key">Team Preference:&nbsp;</div><div class="detail-val">{" " + person['team_preference']}</div></div>
+    <div class="detail-row"><div class="detail-key">Registered On:&nbsp;</div><div class="detail-val">{" " + person['created_at']}</div></div>
+  </div>
+
+  <!-- STEPS -->
+  <div class="steps-section">
+    <div class="steps-title">Next Steps</div>
+    <div class="step"><div class="step-nums" style="margin-top: 5px; font-size: 15px;color: #565459;">1.&nbsp;</div><div class="step-text">Join the <strong>Discord server</strong> — announcements, team matching, and all updates live there.</div></div>
+    <div class="step"><div class="step-nums" style="margin-top: 5px; font-size: 15px;color: #565459;">2.&nbsp;</div><div class="step-text">Build in public → tag us with <strong>#GlobeHackS1</strong></div></div>
+    <div class="step"><div class="step-nums" style="margin-top: 5px; font-size: 15px;color: #565459;">3.&nbsp;</div><div class="step-text">Stay tuned for updates leading up to the event.</div></div>
+  </div>
+
+  <a href="https://discord.gg/HNBWxJW58r" class="btn-discord">Join the Discord Server →</a>
+
+  <div class="divider"></div>
+
+  <div class="footer">
+    <div class="footer-date">April 18–19<span>·</span>ASU Tempe</div>
+    <div class="footer-brand">GlobeHack 2026 🚀</div>
+  </div>
+
 </div>
-
-<h1>Hi {person['first_name']},</h1>
-
-<p>You are officially registered for <b>GlobeHack Season 1</b>.</p>
-
-<!-- REGISTRATION DETAILS -->
-<div style="background:#f9fafb; padding:20px; margin-top:20px;">
-    <h3>Your Registration Details</h3>
-    <p><b>Name:</b> {person['first_name']} {person['last_name']}</p>
-    <p><b>Email:</b> {person['email']}</p>
-    <p><b>Major:</b> {person['major']}</p>
-    <p><b>T-Shirt Size:</b> {person['t_shirt_size']}</p>
-    <p><b>Dietary Preference:</b> {person['dietary_preference']}</p>
-    <p><b>Other Dietary Notes:</b> {person['dietary_other']}</p>
-    <p><b>Team Preference:</b> {person['team_preference']}</p>
-    <p><b>Registered On:</b> {person['created_at']}</p>
-</div>
-
-<!-- NEXT STEPS -->
-<div style="margin-top:20px;">
-    <h3>Next Steps</h3>
-    <p>1. Join Discord</p>
-    <a href="https://discord.gg/PA3XaxjxVH" style="display:block; background:#1e3a8a; color:white; padding:10px; text-align:center; text-decoration:none;">Join Server</a>
-
-    <p>2. Build in Public → Use <b>#GlobeHackS1</b></p>
-    <p>3. Stay tuned for updates</p>
-</div>
-
-<p style="margin-top:30px;"><b>April 18-19 · ASU Tempe</b></p>
-
-<div style="margin-top:30px; background:#1e3a8a; color:white; text-align:center; padding:20px;">
-    GlobeHack 2026 🚀
-</div>
-
-</div>
-
 </body>
 </html>
+
+
         """, subtype="html")
 
             msg.add_attachment(
@@ -256,6 +449,17 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
                 filename="qr.png",
                 cid="qr_image"
             )
+            try:
+                with open("globe.png", "rb") as g:
+                    msg.add_attachment(
+                        g.read(),
+                        maintype="image",
+                        subtype="png",
+                        filename="globe.png",
+                        cid="globe_graphic" # This must match the 'cid:' in your HTML
+                    )
+            except FileNotFoundError:
+                log_error("Globe image file not found! Skipping attachment.")
 
             server.send_message(msg)
 
