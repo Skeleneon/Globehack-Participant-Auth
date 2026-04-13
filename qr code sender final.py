@@ -394,11 +394,11 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
 
   <!-- QR -->
   <div class="qr-section">
-    <div class="qr-label">Your Check-In QR Code</div>
+    <div class="qr-label">Your Meal Plan QR Code</div>
     <div class="qr-img-wrap">
       <img src="cid:qr_image" style="max-width:200px;">
     </div>
-    <div class="qr-note">Screenshot this or open on your phone at the door</div>
+    <div class="qr-note">Show this QR code to get your meal. You will have 5 swipes.</div>
     <div class="checkin-time">
       <div class="checkin-label">Check-In Opens</div>
       <div class="checkin-value">Saturday · 8:00 AM</div>
