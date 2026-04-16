@@ -514,6 +514,7 @@ if botmsg.strip():
 tmp_file = "previous_data.tmp"
 
 with open(tmp_file, "wb") as f:
-    pickle.dump(current_emails, f)
+    finished_emails = new_emails+previous_emails
+    pickle.dump(finished_emails, f)
 
 os.replace(tmp_file, "previous_data.dat")
