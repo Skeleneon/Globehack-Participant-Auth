@@ -377,7 +377,7 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
   <!-- HERO -->
   <div class="hero-banner">
     
-     <div class="hero-wordmark" style="color:#000000;">GLOBE<br>HACK'26</div>
+     <div class="hero-wordmark" style="color-scheme: dark; supported-color-schemes: dark; color: #777777;">GLOBE<br>HACK'26</div>
 
     <!-- Globe -->
     <div class="globe-wrap">
@@ -387,9 +387,9 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
     </div>
 
     <div class="hero-confirmation">
-      <div class="hero-eyebrow", style="color:#000000;">Registration Confirmed</div>
-      <div class="hero-headline", style="color:#000000;">You're officially<br>in.</div>
-      <div class="hero-sub", style="color:#000000 ;">Welcome to GlobeHack Season 1. Here's everything you need to show up ready.</div>
+      <div class="hero-eyebrow", style=" color-scheme:dark; supported-color-schemes: dark; color: #777777;">Registration Confirmed</div>
+      <div class="hero-headline", style="color-scheme: dark; supported-color-schemes: dark; color: #777777;">You're officially<br>in.</div>
+      <div class="hero-sub", style=" color-scheme:dark; supported-color-schemes: dark; color: #777777 ;">Welcome to GlobeHack Season 1. Here's everything you need to show up ready.</div>
     </div>
   </div>
 
