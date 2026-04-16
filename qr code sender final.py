@@ -136,7 +136,7 @@ new_emails = {
     for pid, email in current_emails.items()
     if pid not in previous_emails
 }
-new_emails_limited = dict(list(new_emails.items())[:50])
+new_emails_limited = dict(list(new_emails.items())[:20])
 new_emails = new_emails_limited  
 
 log("---- DEBUG ----")
