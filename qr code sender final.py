@@ -75,7 +75,7 @@ except:
 # -----------------------------
 # LOAD GOOGLE SHEETS CSV
 # -----------------------------
-url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQfFwitdOSUI52bDmb4f7dCVRl6komI8SdzH_qm9PdsbvuWcvb_199vwXUVH6oZG6wu-xCqiZIfPDm5/pub?gid=0&single=true&output=csv"
+url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRYl1ZfsjlDBA0A0iU2NmkJcJXcr0pIHYIrXVpIX32IFZsYvXepaVhvew5k-BRHAg4N8aDStppqwnBb/pub?gid=0&single=true&output=csv"
 
 response = requests.get(url, timeout=15)
 if response.status_code != 200:
@@ -357,6 +357,29 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
     .step-text strong{{color:rgba(255,255,255,.85);font-weight:600;}}
 
     .btn-discord{{display:block;margin:20px 48px 28px;padding:16px 28px;text-align:center;text-decoration:none;border-radius:10px;background:linear-gradient(135deg,rgba(120,40,200,.22) 0%,rgba(40,100,220,.14) 100%);border:1px solid rgba(180,80,255,.28);color:rgba(255,255,255,.88);font-size:14px;font-weight:500;letter-spacing:.03em;animation:fade-rise .8s ease-out .55s both;}}
+    
+      .btn-calendar{{
+        display:block;
+        margin:20px 48px 28px;
+        padding:16px 28px;
+        box-sizing:border-box;
+        text-align:center;
+        text-decoration:none;
+        border-radius:10px;
+        background:linear-gradient(135deg,rgba(0,140,255,.92) 0%,rgba(0,200,255,.92) 100%);
+        border:1.5px solid rgba(0,120,255,.38);
+        color:#fff;
+        font-size:14px;
+        font-weight:600;
+        letter-spacing:.03em;
+        animation:fade-rise .8s ease-out .56s both;
+        box-shadow:0 2px 16px rgba(0,180,255,.13);
+        transition:background 0.2s, box-shadow 0.2s;
+      }}
+      .btn-calendar:hover{{
+        background:linear-gradient(135deg,rgba(0,160,255,1) 0%,rgba(0,220,255,1) 100%);
+        box-shadow:0 4px 24px rgba(0,180,255,.22);
+      }}
     .divider{{margin:0 48px 28px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent);}}
     .footer{{padding:24px 48px 48px;text-align:center;animation:fade-rise .8s ease-out .6s both;}}
     .footer-date{{font-family:'Instrument Serif',serif;font-size:18px;color:rgba(255,255,255,.42);margin-bottom:16px;}}
@@ -406,11 +429,11 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
 
   <!-- QR -->
   <div class="qr-section">
-    <div class="qr-label">Your Meal Plan QR Code</div>
+    <div class="qr-label">Your Check-In QR Code</div>
     <div class="qr-img-wrap">
       <img src="cid:qr_image" style="max-width:200px;">
     </div>
-    <div class="qr-note">Show this QR code to get your meal. You will have 5 swipes.</div>
+    <div class="qr-note">Show this QR code to check in at the event. This is also your meal plan QR code with 5 swipes.</div>
     <div class="checkin-time">
       <div class="checkin-label">Check-In Opens</div>
       <div class="checkin-value">Saturday · 8:00 AM</div>
@@ -438,12 +461,14 @@ with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
     <div class="step"><div class="step-nums" style="margin-top: 5px; font-size: 15px;color: #565459;">3.&nbsp;</div><div class="step-text">Stay tuned for updates leading up to the event.</div></div>
   </div>
 
-  <a href="https://discord.gg/HNBWxJW58r" class="btn-discord">Join the Discord Server →</a>
 
+  <a href="https://discord.gg/g2PhwDVVWt" class="btn-discord">Join the Discord Server →</a>
+
+ 
   <div class="divider"></div>
 
   <div class="footer">
-    <div class="footer-date">April 18–19<span>·</span>ASU Tempe</div>
+    <div class="footer-date">April 18-19<span>·</span>ASU Tempe</div>
     <div class="footer-brand">GlobeHack 2026 🚀</div>
   </div>
 
