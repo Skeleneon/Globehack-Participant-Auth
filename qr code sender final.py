@@ -136,7 +136,7 @@ new_emails = {
     for pid, email in current_emails.items()
     if pid not in previous_emails
 }
-new_emails_limited = dict(list(new_emails.items())[:20])
+new_emails_limited = dict(list(new_emails.items())[:10])
 new_emails = new_emails_limited  
 
 log("---- DEBUG ----")
@@ -514,7 +514,7 @@ if botmsg.strip():
 tmp_file = "previous_data.tmp"
 
 with open(tmp_file, "wb") as f:
-    finished_emails = new_emails+previous_emails
+    finished_emails = {**new_emails, **previous_emails}
     pickle.dump(finished_emails, f)
 
 os.replace(tmp_file, "previous_data.dat")
