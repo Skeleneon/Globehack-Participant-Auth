@@ -5,8 +5,12 @@ on:
 
   workflow_dispatch:
   schedule:
-    - cron: "*/13 * * * *"
-    - cron: "*/7 * * * *"
+    - cron: "*/5 * * * *"
+    - cron: "*/11 * * * *"
+    - cron: "*/17 * * * *"
+    - cron: "*/23 * * * *"
+    - cron: "*/29 * * * *"
+    
   
 
 # 🔥 prevents multiple runs from corrupting previous_data
