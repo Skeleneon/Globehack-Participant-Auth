@@ -3,9 +3,7 @@ name: Run QR Sender v2
 on:
   
 
-  workflow_dispatch:
-  schedule:
-    - cron: "*/7 * * * *"
+  workflow_dispatch:
     
   
 
