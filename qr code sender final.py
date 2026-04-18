@@ -139,8 +139,6 @@ new_emails = {
 new_emails_limited = dict(list(new_emails.items())[:10])
 new_emails = new_emails_limited  
 
-new_emails={}
-
 log("---- DEBUG ----")
 log(f"Current: {len(current_emails)}")
 log(f"Previous: {len(previous_emails)}")
